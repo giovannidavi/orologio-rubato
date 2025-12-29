@@ -69,43 +69,53 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen text-white p-4 md:p-8">
+    <div className="min-h-screen text-text-primary p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <header className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-bold text-gold tracking-wider mb-2"
-              style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
+          <h1 className="font-display text-4xl md:text-6xl font-bold text-accent-gold tracking-wider mb-2"
+              style={{ textShadow: '0 0 20px rgba(212, 175, 55, 0.5)' }}>
             L'OROLOGIO RUBATO
           </h1>
-          <p className="text-lg md:text-xl text-gray-400 italic">
+          <p className="font-mono text-lg md:text-xl text-text-secondary italic">
             Interroga i sospettati. Scopri la verità.
           </p>
         </header>
 
         {/* Terminal Access Section */}
-        <div className="bg-white/5 rounded-xl p-4 md:p-6 mb-8 border border-white/10">
-          <label htmlFor="apiKey" className="block mb-2 font-semibold text-gold">
-            🔐 Password di accesso al Terminale Interrogatori:
-          </label>
-          <div className="flex gap-2">
-            <input
-              type={showApiKey ? 'text' : 'password'}
-              id="apiKey"
-              value={apiKey}
-              onChange={handleApiKeyChange}
-              placeholder="Inserisci la password..."
-              className="flex-1 px-4 py-3 bg-black/30 border-2 border-white/20 rounded-lg text-white focus:outline-none focus:border-gold transition-colors"
-            />
-            <button
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="px-4 py-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-xl"
-            >
-              {showApiKey ? '🙈' : '👁️'}
-            </button>
+        <div className="terminal-card mb-8">
+          <div className="terminal-header">
+            <div className="terminal-dot bg-error"></div>
+            <div className="terminal-dot bg-warning"></div>
+            <div className="terminal-dot bg-success"></div>
+            <span className="text-text-secondary text-sm ml-2">terminale_accesso.sh</span>
           </div>
-          {apiKey && (
-            <p className="mt-2 text-sm text-green-400">✓ Accesso al terminale autorizzato</p>
-          )}
+          <div className="terminal-body">
+            <label htmlFor="apiKey" className="block mb-2 font-display text-sm uppercase tracking-wider text-accent-gold">
+              Password di accesso al Terminale Interrogatori:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type={showApiKey ? 'text' : 'password'}
+                id="apiKey"
+                value={apiKey}
+                onChange={handleApiKeyChange}
+                placeholder="Inserisci la password..."
+                className="input-field flex-1"
+              />
+              <button
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="btn-secondary px-4"
+              >
+                {showApiKey ? 'NASCONDI' : 'MOSTRA'}
+              </button>
+            </div>
+            {apiKey && (
+              <p className="mt-3 text-sm text-success font-mono">
+                {'>'} Accesso al terminale autorizzato
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Characters Grid */}
@@ -114,62 +124,60 @@ export default function Home() {
             <div
               key={character.id}
               onClick={() => handleCharacterClick(character.id)}
-              className={`relative bg-white/5 rounded-2xl p-5 transition-all duration-300 border-2 border-transparent overflow-hidden group ${
+              className={`terminal-card transition-all duration-300 ${
                 isUnlocked
-                  ? 'cursor-pointer hover:border-current hover:-translate-y-1 hover:shadow-xl'
+                  ? 'cursor-pointer hover:-translate-y-1 hover:shadow-glow-gold'
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              style={{
-                '--tw-border-opacity': 1,
-                borderColor: 'transparent',
-              }}
-              onMouseEnter={(e) => isUnlocked && (e.currentTarget.style.borderColor = character.color)}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
             >
-              {/* Top accent bar */}
-              <div
-                className="absolute top-0 left-0 right-0 h-1"
-                style={{ backgroundColor: character.color }}
-              />
+              {/* Terminal Header */}
+              <div className="terminal-header">
+                <div className="terminal-dot" style={{ backgroundColor: character.color }}></div>
+                <span className="text-text-secondary text-xs ml-1 truncate">sospettato_{character.id}.log</span>
+                {/* Question badge */}
+                {questionCounts[character.id] > 0 && (
+                  <span
+                    className="ml-auto px-2 py-0.5 rounded text-xs font-mono text-bg-primary"
+                    style={{ backgroundColor: character.color }}
+                  >
+                    {questionCounts[character.id]}Q
+                  </span>
+                )}
+              </div>
 
-              {/* Question badge */}
-              {questionCounts[character.id] > 0 && (
-                <div
-                  className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold text-white"
-                  style={{ backgroundColor: character.color }}
-                >
-                  {questionCounts[character.id]} domande
-                </div>
-              )}
+              <div className="terminal-body">
+                {/* Avatar */}
+                <div className="text-5xl mb-3">{character.avatar}</div>
 
-              {/* Avatar */}
-              <div className="text-5xl mb-3">{character.avatar}</div>
+                {/* Name & Title */}
+                <h3 className="font-display text-lg font-bold text-text-primary mb-1 uppercase tracking-wide">
+                  {character.name}
+                </h3>
+                <p className="font-mono text-sm mb-3" style={{ color: character.color }}>
+                  {character.title}
+                </p>
 
-              {/* Name & Title */}
-              <h3 className="text-xl font-bold text-white mb-1">{character.name}</h3>
-              <p className="font-semibold mb-3" style={{ color: character.color }}>
-                {character.title}
-              </p>
+                {/* Description */}
+                <p className="text-text-secondary text-sm leading-relaxed mb-4 font-mono">
+                  {character.shortDescription}
+                </p>
 
-              {/* Description */}
-              <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                {character.shortDescription}
-              </p>
-
-              {/* Suspicion Bar */}
-              <div className="mt-auto">
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>Livello di sospetto</span>
-                  <span>{character.suspicionLevel}%</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${character.suspicionLevel}%`,
-                      backgroundColor: character.color
-                    }}
-                  />
+                {/* Suspicion Bar */}
+                <div className="mt-auto">
+                  <div className="flex justify-between text-xs text-text-secondary mb-1 font-mono">
+                    <span>SOSPETTO</span>
+                    <span>{character.suspicionLevel}%</span>
+                  </div>
+                  <div className="h-1 bg-bg-secondary rounded overflow-hidden">
+                    <div
+                      className="h-full transition-all duration-500"
+                      style={{
+                        width: `${character.suspicionLevel}%`,
+                        backgroundColor: character.color,
+                        boxShadow: `0 0 10px ${character.color}`
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -177,9 +185,9 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="text-center pt-4 border-t border-white/10">
-          <p className="text-gray-500 italic">
-            Ogni squadra ha {maxQuestions} domande per personaggio. Scegliete con saggezza.
+        <footer className="text-center pt-4 border-t border-border-custom">
+          <p className="text-text-secondary font-mono text-sm">
+            {'>'} Ogni squadra ha {maxQuestions} domande per personaggio. Scegliete con saggezza.
           </p>
         </footer>
       </div>

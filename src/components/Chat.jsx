@@ -75,41 +75,47 @@ export default function Chat() {
   if (!character) return null;
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto text-white">
+    <div className="flex flex-col h-screen max-w-3xl mx-auto text-text-primary">
       {/* Header */}
-      <header
-        className="flex flex-col md:flex-row items-center justify-between p-4 bg-black/30 gap-3"
-        style={{ borderBottom: `2px solid ${character.color}` }}
-      >
-        <button
-          onClick={() => navigate('/')}
-          className="w-full md:w-auto px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
-        >
-          ← Torna ai sospettati
-        </button>
-
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{character.avatar}</span>
-          <div className="text-center md:text-left">
-            <h2 className="text-lg font-bold">{character.name}</h2>
-            <p className="text-sm" style={{ color: character.color }}>{character.title}</p>
-          </div>
+      <header className="terminal-card rounded-none">
+        <div className="terminal-header">
+          <div className="terminal-dot" style={{ backgroundColor: character.color }}></div>
+          <span className="text-text-secondary text-sm ml-1">interrogatorio_{character.id}.log</span>
+          <span
+            className="ml-auto px-3 py-1 rounded text-xs font-display uppercase text-bg-primary"
+            style={{ backgroundColor: character.color }}
+          >
+            {questionCount}/{maxQuestions}
+          </span>
         </div>
+        <div className="flex flex-col md:flex-row items-center justify-between p-4 gap-3">
+          <button
+            onClick={() => navigate('/')}
+            className="btn-secondary w-full md:w-auto text-sm"
+          >
+            ← SOSPETTATI
+          </button>
 
-        <div
-          className="px-4 py-2 rounded-full font-semibold text-sm text-white"
-          style={{ backgroundColor: character.color }}
-        >
-          Domande: {questionCount}/{maxQuestions}
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{character.avatar}</span>
+            <div className="text-center md:text-left">
+              <h2 className="font-display text-lg font-bold uppercase tracking-wide">{character.name}</h2>
+              <p className="font-mono text-sm" style={{ color: character.color }}>{character.title}</p>
+            </div>
+          </div>
+
+          <div className="w-full md:w-auto md:opacity-0 md:pointer-events-none">
+            <button className="btn-secondary w-full md:w-auto text-sm opacity-0">← SOSPETTATI</button>
+          </div>
         </div>
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-bg-primary">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 py-12">
-            <p className="mb-2">Inizia l'interrogatorio con {character.name}.</p>
-            <p className="text-sm italic">Scegli bene le tue domande!</p>
+          <div className="text-center text-text-secondary py-12 font-mono">
+            <p className="mb-2">{'>'} Inizia l'interrogatorio con {character.name}.</p>
+            <p className="text-sm">{'>'} Scegli bene le tue domande!</p>
           </div>
         )}
 
@@ -124,12 +130,15 @@ export default function Chat() {
               {message.role === 'assistant' ? character.avatar : '🕵️'}
             </span>
             <div
-              className={`px-4 py-3 rounded-2xl leading-relaxed ${
+              className={`px-4 py-3 font-mono text-sm leading-relaxed ${
                 message.role === 'user'
-                  ? 'text-white rounded-br-sm'
-                  : 'bg-white/10 rounded-bl-sm'
+                  ? 'text-bg-primary rounded rounded-br-none'
+                  : 'bg-bg-card border border-border-custom rounded rounded-bl-none'
               }`}
-              style={message.role === 'user' ? { backgroundColor: character.color } : {}}
+              style={message.role === 'user' ? {
+                backgroundColor: character.color,
+                boxShadow: `0 0 15px ${character.color}40`
+              } : {}}
             >
               {message.content}
             </div>
@@ -139,17 +148,17 @@ export default function Chat() {
         {isLoading && (
           <div className="flex items-start gap-3 max-w-[85%]">
             <span className="text-2xl flex-shrink-0">{character.avatar}</span>
-            <div className="bg-white/10 px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1">
-              <span className="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
-              <span className="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
-              <span className="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
+            <div className="bg-bg-card border border-border-custom px-4 py-3 rounded rounded-bl-none flex gap-1">
+              <span className="typing-dot w-2 h-2 bg-accent-cyan rounded-full"></span>
+              <span className="typing-dot w-2 h-2 bg-accent-cyan rounded-full"></span>
+              <span className="typing-dot w-2 h-2 bg-accent-cyan rounded-full"></span>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-500/20 text-red-400 px-4 py-3 rounded-lg text-center border border-red-500/30">
-            {error}
+          <div className="bg-error/20 text-error px-4 py-3 rounded text-center border border-error/30 font-mono text-sm">
+            {'>'} {error}
           </div>
         )}
 
@@ -158,38 +167,33 @@ export default function Chat() {
 
       {/* Input Form or Limit Reached Message */}
       {hasReachedLimit ? (
-        <div className="p-4 bg-black/20 text-center">
-          <p className="text-gray-400">
-            Hai esaurito le {maxQuestions} domande per questo personaggio.
+        <div className="p-4 bg-bg-secondary border-t border-border-custom text-center">
+          <p className="text-text-secondary font-mono text-sm mb-3">
+            {'>'} Hai esaurito le {maxQuestions} domande per questo personaggio.
           </p>
           <button
             onClick={() => navigate('/')}
-            className="mt-3 px-6 py-2 rounded-full text-white font-semibold transition-all hover:brightness-110"
-            style={{ backgroundColor: character.color }}
+            className="btn-primary"
           >
-            Interroga un altro sospettato
+            INTERROGA UN ALTRO SOSPETTATO
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="p-4 bg-black/20 flex gap-2">
+        <form onSubmit={handleSubmit} className="p-4 bg-bg-secondary border-t border-border-custom flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Fai una domanda..."
+            placeholder="> Fai una domanda..."
             disabled={isLoading}
-            className="flex-1 px-4 py-3 bg-black/30 border-2 border-white/10 rounded-full text-white focus:outline-none transition-colors placeholder-gray-500"
-            style={{ '--tw-ring-color': character.color }}
-            onFocus={(e) => e.target.style.borderColor = character.color}
-            onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+            className="input-field flex-1"
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-6 py-3 rounded-full text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110"
-            style={{ backgroundColor: character.color }}
+            className="btn-primary"
           >
-            Invia
+            INVIA
           </button>
         </form>
       )}
