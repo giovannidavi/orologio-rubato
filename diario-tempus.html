@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminale Tempus — Dipartimento del Tempo</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .terminal {
+            background: linear-gradient(145deg, #12121a 0%, #0a0a0f 100%);
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            max-width: 650px;
+            width: 100%;
+            box-shadow: 
+                0 0 20px rgba(212, 175, 55, 0.3),
+                inset 0 0 60px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Effetto scanline */
+        .terminal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            opacity: 0.3;
+            z-index: 10;
+        }
+
+        .terminal-header {
+            background: linear-gradient(90deg, #d4af37 0%, #b8962e 100%);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #0a0a0f;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #0a0a0f;
+            opacity: 0.5;
+        }
+
+        .terminal-body {
+            padding: 25px;
+        }
+
+        /* LOGIN SCREEN */
+        .login-screen {
+            text-align: center;
+        }
+
+        .lock-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .login-title {
+            color: #d4af37;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            color: #888899;
+            font-size: 12px;
+            margin-bottom: 25px;
+        }
+
+        .password-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .password-input {
+            background: rgba(42, 42, 58, 0.5);
+            border: 2px solid #3a3a4a;
+            border-radius: 6px;
+            padding: 12px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            color: #00d4ff;
+            text-align: center;
+            width: 280px;
+            letter-spacing: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .password-input::placeholder {
+            color: #555566;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(90deg, #d4af37 0%, #b8962e 100%);
+            border: none;
+            border-radius: 6px;
+            padding: 12px 40px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #0a0a0f;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        }
+
+        .error-message {
+            color: #ff4466;
+            font-size: 12px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-message.show {
+            opacity: 1;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .hint {
+            color: #555566;
+            font-size: 11px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        /* DIARY CONTENT */
+        .diary-content {
+            display: none;
+        }
+
+        .diary-content.show {
+            display: block;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .diary-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a2a3a;
+        }
+
+        .diary-title {
+            color: #d4af37;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .diary-subtitle {
+            color: #00d4ff;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .diary-entry {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(42, 42, 58, 0.3);
+            border-left: 3px solid #d4af37;
+            border-radius: 0 6px 6px 0;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .diary-entry:nth-child(1) { animation-delay: 0.2s; }
+        .diary-entry:nth-child(2) { animation-delay: 0.5s; }
+        .diary-entry:nth-child(3) { animation-delay: 0.8s; }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .entry-date {
+            color: #d4af37;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .entry-text {
+            color: #e0e0e0;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .entry-text .highlight {
+            color: #ff6b6b;
+            font-weight: 700;
+        }
+
+        .entry-text .name {
+            color: #00d4ff;
+        }
+
+        .diary-footer {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #2a2a3a;
+            text-align: center;
+        }
+
+        .footer-text {
+            color: #888899;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .classified {
+            color: #d4af37;
+            font-weight: 700;
+            margin-top: 8px;
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+
+        /* Success animation */
+        .success-flash {
+            animation: successFlash 0.5s ease;
+        }
+
+        @keyframes successFlash {
+            0%, 100% { border-color: #d4af37; }
+            50% { border-color: #00ff88; box-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal" id="terminal">
+        <div class="terminal-header">
+            <span class="terminal-title">TERMINALE PERSONALE — TEMPUS</span>
+            <div class="terminal-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+        <div class="terminal-body">
+            
+            <!-- LOGIN SCREEN -->
+            <div class="login-screen" id="loginScreen">
+                <div class="lock-icon">🔒</div>
+                <div class="login-title">ACCESSO RISERVATO</div>
+                <div class="login-subtitle">Terminale personale del Professor O. Tempus</div>
+                
+                <div class="password-container">
+                    <input 
+                        type="password" 
+                        class="password-input" 
+                        id="passwordInput" 
+                        placeholder="••••••••••"
+                        autocomplete="off"
+                        autofocus
+                    >
+                    <button class="submit-btn" id="submitBtn">ACCEDI</button>
+                </div>
+                
+                <div class="error-message" id="errorMessage">
+                    ⚠️ PASSWORD ERRATA — ACCESSO NEGATO
+                </div>
+                
+                <div class="hint">
+                    Suggerimento: cognome + anno di creazione dell'orologio
+                </div>
+            </div>
+
+            <!-- DIARY CONTENT -->
+            <div class="diary-content" id="diaryContent">
+                <div class="diary-header">
+                    <div class="diary-title">DIARIO PERSONALE — PROF. O. TEMPUS</div>
+                    <div class="diary-subtitle">[ FILE DECRIPTATO ]</div>
+                </div>
+
+                <div class="diary-entries">
+                    <div class="diary-entry">
+                        <div class="entry-date">[15-DIC-2025 | 23:14]</div>
+                        <div class="entry-text">
+                            Il Consiglio vuole rimuovermi. Dopo 55 anni di 
+                            servizio impeccabile. <span class="highlight">CINQUANTACINQUE ANNI.</span><br><br>
+                            Ho detto a <span class="name">Mila</span> che preferirei 
+                            <span class="highlight">DISTRUGGERE</span> l'orologio 
+                            piuttosto che lasciarlo in mani incompetenti.<br><br>
+                            Lei mi ha guardato con quegli occhi... come se 
+                            avesse paura. Non di me. <em>Per</em> me.
+                        </div>
+                    </div>
+
+                    <div class="diary-entry">
+                        <div class="entry-date">[23-DIC-2025 | 21:47]</div>
+                        <div class="entry-text">
+                            <span class="name">Mila</span> mi ha chiesto se intendevo davvero farlo.<br><br>
+                            Le ho detto che non lo so. È la verità.<br>
+                            Non lo so.
+                        </div>
+                    </div>
+
+                    <div class="diary-entry">
+                        <div class="entry-date">[30-DIC-2025 | 02:33]</div>
+                        <div class="entry-text">
+                            Non riesco a dormire. Continuo a pensare 
+                            all'orologio. Forse <span class="name">Mila</span> ha ragione. Forse sono 
+                            solo un vecchio pazzo.<br><br>
+                            Ma l'idea di vederlo nelle loro mani... 
+                            <span class="highlight">mi fa impazzire.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="diary-footer">
+                    <div class="footer-text">DIPARTIMENTO INVESTIGATIVO DEL TEMPO</div>
+                    <div class="classified">◆ DOCUMENTO RISERVATO ◆</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById('passwordInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const loginScreen = document.getElementById('loginScreen');
+        const diaryContent = document.getElementById('diaryContent');
+        const terminal = document.getElementById('terminal');
+
+        const correctPassword = 'tempus1970';
+
+        function checkPassword() {
+            const enteredPassword = passwordInput.value.toLowerCase().trim();
+            
+            if (enteredPassword === correctPassword) {
+                // Success!
+                terminal.classList.add('success-flash');
+                setTimeout(() => {
+                    loginScreen.style.display = 'none';
+                    diaryContent.classList.add('show');
+                }, 500);
+            } else {
+                // Error
+                errorMessage.classList.add('show');
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        submitBtn.addEventListener('click', checkPassword);
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        // Clear error on typing
+        passwordInput.addEventListener('input', () => {
+            errorMessage.classList.remove('show');
+        });
+    </script>
+</body>
+</html>

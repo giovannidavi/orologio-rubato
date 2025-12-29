@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Sicurezza — Dipartimento del Tempo</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .terminal {
+            background: linear-gradient(145deg, #12121a 0%, #0a0a0f 100%);
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 
+                0 0 20px rgba(212, 175, 55, 0.3),
+                inset 0 0 60px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: linear-gradient(90deg, #d4af37 0%, #b8962e 100%);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #0a0a0f;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #0a0a0f;
+            opacity: 0.5;
+        }
+
+        .terminal-body {
+            padding: 20px;
+        }
+
+        .log-header {
+            color: #00d4ff;
+            font-size: 11px;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2a2a3a;
+        }
+
+        .log-entry {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(42, 42, 58, 0.3);
+            border-left: 3px solid #d4af37;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .log-time {
+            color: #d4af37;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .log-content {
+            color: #e0e0e0;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 6px;
+        }
+
+        .log-detail {
+            color: #888899;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .log-entry.alert {
+            border-left-color: #ff4466;
+            background: rgba(255, 68, 102, 0.1);
+        }
+
+        .log-entry.alert .log-time {
+            color: #ff4466;
+        }
+
+        .alert-icon {
+            color: #ff4466;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .log-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #2a2a3a;
+            text-align: center;
+        }
+
+        .footer-text {
+            color: #888899;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .classified {
+            color: #ff4466;
+            font-weight: 700;
+            margin-top: 8px;
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+
+        /* Effetto scanline */
+        .terminal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .terminal {
+            position: relative;
+        }
+
+        /* Animazione di ingresso */
+        .log-entry {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .log-entry:nth-child(1) { animation-delay: 0.1s; }
+        .log-entry:nth-child(2) { animation-delay: 0.2s; }
+        .log-entry:nth-child(3) { animation-delay: 0.3s; }
+        .log-entry:nth-child(4) { animation-delay: 0.4s; }
+        .log-entry:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="terminal-header">
+            <span class="terminal-title">SISTEMA DI SICUREZZA</span>
+            <div class="terminal-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+        <div class="terminal-body">
+            <div class="log-header">
+                ▸ LOG DISPOSITIVI — 31 DICEMBRE 2025<br>
+                ▸ LIVELLO ACCESSO: 2 — INVESTIGATIVO
+            </div>
+
+            <div class="log-entry">
+                <div class="log-time">[14:30:17]</div>
+                <div class="log-content">Ingresso registrato</div>
+                <div class="log-detail">
+                    Varco: Ufficio FlashForward Inc.<br>
+                    Badge: JFL-CORP-7291
+                </div>
+            </div>
+
+            <div class="log-entry">
+                <div class="log-time">[15:00:44]</div>
+                <div class="log-content">Attività: Pranzo di lavoro</div>
+                <div class="log-detail">
+                    Luogo: Sala riunioni piano 3
+                </div>
+            </div>
+
+            <div class="log-entry">
+                <div class="log-time">[16:00:03]</div>
+                <div class="log-content">Dispositivo JFL-CORP-7291 connesso</div>
+                <div class="log-detail">
+                    Attività: Videochiamata internazionale<br>
+                    Destinazione: Singapore (3 partecipanti)<br>
+                    Stato: IN CORSO
+                </div>
+            </div>
+
+            <div class="log-entry alert">
+                <div class="log-time"><span class="alert-icon">⚠️</span> [17:33:41]</div>
+                <div class="log-content">ALLARME: Sensori laboratorio principale</div>
+                <div class="log-detail">
+                    Evento: Rimozione componenti orologio<br>
+                    Dettagli: Lancette rimosse manualmente
+                </div>
+            </div>
+
+            <div class="log-entry">
+                <div class="log-time">[18:15:22]</div>
+                <div class="log-content">Dispositivo JFL-CORP-7291 disconnesso</div>
+                <div class="log-detail">
+                    Durata sessione: 2h 15m 19s<br>
+                    Stato: COMPLETATA
+                </div>
+            </div>
+
+            <div class="log-footer">
+                <div class="footer-text">DIPARTIMENTO INVESTIGATIVO DEL TEMPO</div>
+                <div class="classified">◆ CLASSIFICATO ◆</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
