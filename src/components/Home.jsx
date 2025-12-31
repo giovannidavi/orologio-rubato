@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { characters } from '../data/characters';
+import { clearTeamHistory, subscribeToTeamChats } from '../firebase/database';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -9,17 +10,9 @@ export default function Home() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [questionCounts, setQuestionCounts] = useState({});
   const [maxQuestions, setMaxQuestions] = useState(3);
+  const [isErasing, setIsErasing] = useState(false);
 
   useEffect(() => {
-    // Check for erase query param (admin only)
-    if (searchParams.get('erase') === 'true') {
-      characters.forEach(char => {
-        sessionStorage.removeItem(`chat_history_${char.id}`);
-      });
-      // Remove the query param after erasing
-      setSearchParams({});
-    }
-
     // Check for question limit param
     const qParam = searchParams.get('q');
     if (qParam) {
@@ -40,20 +33,42 @@ export default function Home() {
     if (savedKey) {
       setApiKey(savedKey);
     }
+  }, [searchParams]);
 
-    // Load question counts
-    const counts = {};
-    characters.forEach(char => {
-      const history = sessionStorage.getItem(`chat_history_${char.id}`);
-      if (history) {
-        const messages = JSON.parse(history);
-        counts[char.id] = messages.filter(m => m.role === 'user').length;
-      } else {
-        counts[char.id] = 0;
+  // Handle erase param when API key is available
+  useEffect(() => {
+    const handleErase = async () => {
+      if (searchParams.get('erase') === 'true' && apiKey) {
+        setIsErasing(true);
+        try {
+          await clearTeamHistory(apiKey);
+          // Remove the query param after erasing
+          setSearchParams({});
+        } catch (err) {
+          console.error('Error clearing history:', err);
+        } finally {
+          setIsErasing(false);
+        }
       }
+    };
+
+    handleErase();
+  }, [searchParams, setSearchParams, apiKey]);
+
+  // Subscribe to question counts when API key changes
+  useEffect(() => {
+    if (!apiKey) {
+      setQuestionCounts({});
+      return;
+    }
+
+    const characterIds = characters.map(c => c.id);
+    const unsubscribe = subscribeToTeamChats(apiKey, characterIds, (counts) => {
+      setQuestionCounts(counts);
     });
-    setQuestionCounts(counts);
-  }, [searchParams, setSearchParams]);
+
+    return () => unsubscribe();
+  }, [apiKey]);
 
   const handleApiKeyChange = (e) => {
     const key = e.target.value;
@@ -113,6 +128,11 @@ export default function Home() {
             {apiKey && (
               <p className="mt-3 text-sm text-success font-mono">
                 {'>'} Accesso al terminale autorizzato
+              </p>
+            )}
+            {isErasing && (
+              <p className="mt-3 text-sm text-warning font-mono">
+                {'>'} Cancellazione cronologia in corso...
               </p>
             )}
           </div>

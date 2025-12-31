@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCharacter } from '../data/characters';
 import { sendMessage } from '../services/anthropic';
+import { saveChatHistory, subscribeToChatHistory } from '../firebase/database';
 
 export default function Chat() {
   const { characterId } = useParams();
@@ -11,10 +12,12 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
 
   const maxQuestions = parseInt(sessionStorage.getItem('max_questions') || '3', 10);
+  const apiKey = sessionStorage.getItem('anthropic_api_key');
 
   useEffect(() => {
     if (!character) {
@@ -22,23 +25,33 @@ export default function Chat() {
       return;
     }
 
-    // Load chat history
-    const savedHistory = sessionStorage.getItem(`chat_history_${characterId}`);
-    if (savedHistory) {
-      setMessages(JSON.parse(savedHistory));
+    if (!apiKey) {
+      navigate('/');
+      return;
     }
-  }, [characterId, character, navigate]);
+
+    // Subscribe to chat history from Firebase (real-time updates)
+    setIsLoadingHistory(true);
+    const unsubscribe = subscribeToChatHistory(
+      apiKey,
+      characterId,
+      (history) => {
+        setMessages(history);
+        setIsLoadingHistory(false);
+      },
+      (error) => {
+        console.error('Firebase error:', error);
+        setError('Errore di connessione al database. Controlla le regole Firebase.');
+        setIsLoadingHistory(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [characterId, character, navigate, apiKey]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  useEffect(() => {
-    // Save history when messages change
-    if (messages.length > 0) {
-      sessionStorage.setItem(`chat_history_${characterId}`, JSON.stringify(messages));
-    }
-  }, [messages, characterId]);
 
   const questionCount = messages.filter(m => m.role === 'user').length;
   const hasReachedLimit = questionCount >= maxQuestions;
@@ -47,7 +60,6 @@ export default function Chat() {
     e.preventDefault();
     if (!input.trim() || isLoading || hasReachedLimit) return;
 
-    const apiKey = sessionStorage.getItem('anthropic_api_key');
     if (!apiKey) {
       setError('Accesso non autorizzato. Torna alla home e inserisci la password del terminale.');
       return;
@@ -62,7 +74,11 @@ export default function Chat() {
 
     try {
       const response = await sendMessage(apiKey, character.systemPrompt, newMessages);
-      setMessages([...newMessages, { role: 'assistant', content: response }]);
+      const updatedMessages = [...newMessages, { role: 'assistant', content: response }];
+      setMessages(updatedMessages);
+
+      // Save to Firebase
+      await saveChatHistory(apiKey, characterId, updatedMessages);
     } catch (err) {
       setError(err.message);
       // Remove the user message if API call failed
@@ -112,12 +128,16 @@ export default function Chat() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-bg-primary">
-        {messages.length === 0 && (
+        {isLoadingHistory ? (
+          <div className="text-center text-text-secondary py-12 font-mono">
+            <p>{'>'} Caricamento cronologia...</p>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="text-center text-text-secondary py-12 font-mono">
             <p className="mb-2">{'>'} Inizia l'interrogatorio con {character.name}.</p>
             <p className="text-sm">{'>'} Scegli bene le tue domande!</p>
           </div>
-        )}
+        ) : null}
 
         {messages.map((message, index) => (
           <div
@@ -185,12 +205,12 @@ export default function Chat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="> Fai una domanda..."
-            disabled={isLoading}
+            disabled={isLoading || isLoadingHistory}
             className="input-field flex-1"
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || isLoadingHistory || !input.trim()}
             className="btn-primary"
           >
             INVIA
